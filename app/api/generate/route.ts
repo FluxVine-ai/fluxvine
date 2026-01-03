@@ -48,22 +48,33 @@ export async function POST(req: Request) {
         if (!response.ok) {
             const errorData = await response.json();
             console.error('DeepSeek Error:', errorData);
-            return NextResponse.json({ error: 'AI engine failed' }, { status: 502 }, {
-                headers: { 'Access-Control-Allow-Origin': '*' }
-            });
+            return NextResponse.json(
+                { error: 'AI engine failed' },
+                {
+                    status: 502,
+                    headers: { 'Access-Control-Allow-Origin': '*' }
+                }
+            );
         }
 
         const data = await response.json();
         const content = data.choices[0].message.content;
 
-        return NextResponse.json({ copywriting: content }, {
-            headers: { 'Access-Control-Allow-Origin': '*' }
-        });
+        return NextResponse.json(
+            { copywriting: content },
+            {
+                headers: { 'Access-Control-Allow-Origin': '*' }
+            }
+        );
 
     } catch (error) {
         console.error('API Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 }, {
-            headers: { 'Access-Control-Allow-Origin': '*' }
-        });
+        return NextResponse.json(
+            { error: 'Internal Server Error' },
+            {
+                status: 500,
+                headers: { 'Access-Control-Allow-Origin': '*' }
+            }
+        );
     }
 }
