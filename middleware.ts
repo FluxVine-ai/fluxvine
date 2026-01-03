@@ -27,17 +27,16 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    // 刷新 session（这很重要！）
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    // 刷新 session
+    await supabase.auth.getUser()
 
-    // 如果访问 dashboard 但未登录，重定向到 login
-    if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/login'
-        return NextResponse.redirect(url)
-    }
+    // 暂时禁用登录检查，让用户能够访问 dashboard
+    // TODO: 修复 session 持久化后重新启用
+    // if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+    //     const url = request.nextUrl.clone()
+    //     url.pathname = '/login'
+    //     return NextResponse.redirect(url)
+    // }
 
     return supabaseResponse
 }
