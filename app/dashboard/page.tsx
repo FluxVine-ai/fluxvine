@@ -39,9 +39,8 @@ export default function Dashboard() {
             // 优先检查 Session (比 getUser 更快，因为它直接读 LocalStorage/Cookie)
             const { data: { session }, error } = await supabase.auth.getSession();
 
-            if (error || !session) {
-                console.log('Client: No active session found, redirecting to login');
-                router.push('/login');
+            if (!session) {
+                // 如果没有 session，就让 layout 的服务端检查来处理
                 return;
             }
 

@@ -1,14 +1,22 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
-// 这是一个纯粹的包装器，不再进行严格的服务端拦截
-// 我们将验证逻辑移交给客户端页面，这样更能容忍 Cookie 传输问题
-export default function DashboardLayout({
+export default async function DashboardLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
+    const supabase = await createClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
+
+    // 服务端强制检查：如果没登录，直接重定向到登录页
+    if (error || !user) {
+        redirect('/login')
+    }
+
     return (
-        <>
+        <div className="min-h-screen bg-background">
             {children}
-        </>
+        </div>
     )
 }
