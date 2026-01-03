@@ -44,12 +44,27 @@ export default function Login() {
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-        if (error) setMessage(error.message);
-        else router.push('/dashboard');
+        setMessage('');
+
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) {
+                setMessage(error.message);
+            } else if (data.session) {
+                // Session 创建成功，等待一下确保 cookie 被设置
+                setMessage('Login successful! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 500);
+            }
+        } catch (err: any) {
+            setMessage(err.message || 'Login failed');
+        }
+
         setLoading(false);
     };
 
