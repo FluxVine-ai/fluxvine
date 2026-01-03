@@ -37,6 +37,23 @@ export default function Dashboard() {
 
         // 检查登录状态
         async function checkAuth() {
+            // 尝试手动恢复 session
+            const storedAccessToken = localStorage.getItem('sb-access-token');
+            const storedRefreshToken = localStorage.getItem('sb-refresh-token');
+
+            if (storedAccessToken && storedRefreshToken) {
+                const { error: sessionError } = await supabase.auth.setSession({
+                    access_token: storedAccessToken,
+                    refresh_token: storedRefreshToken,
+                });
+                if (sessionError) {
+                    console.error('Failed to restore session:', sessionError);
+                    // 只有在明确无法恢复 session 时才清除
+                    // localStorage.removeItem('sb-access-token');
+                    // localStorage.removeItem('sb-refresh-token');
+                }
+            }
+
             const { data: { user }, error } = await supabase.auth.getUser();
 
             if (error || !user) {

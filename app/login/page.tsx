@@ -58,12 +58,12 @@ export default function Login() {
                 setMessage(error.message);
                 setLoading(false);
             } else if (data.session) {
-                // Session 创建成功
+                // 手动保存 session 到 localStorage
+                localStorage.setItem('sb-access-token', data.session.access_token);
+                localStorage.setItem('sb-refresh-token', data.session.refresh_token);
+
                 setMessage('Login successful! Redirecting...');
-                // 使用 window.location 强制刷新页面，确保 session 被加载
-                setTimeout(() => {
-                    window.location.href = '/dashboard';
-                }, 500);
+                router.push('/dashboard');
             } else {
                 setMessage('Login failed: No session created');
                 setLoading(false);
