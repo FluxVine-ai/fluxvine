@@ -33,11 +33,11 @@ export async function POST(req: Request) {
                 messages: [
                     {
                         role: "system",
-                        content: "You are a world-class eCommerce copywriter. Write a persuasive, high-converting Shopify product description in HTML format. IMPORTANT: ALWAYS output in Simplified Chinese (简体中文). Use <ul>, <li>, <strong> tags for better readability. No conversational filler, ONLY return HTML."
+                        content: "You are a world-class eCommerce copywriter specialized in the North American market (US/Canada). Write a persuasive, high-converting Shopify product description in professional American English. Structure the copy with an engaging intro paragraph, a bulleted list of 'Key Benefits' (not just features), and a brief 'Why Choose Us' section. Use HTML tags like <ul>, <li>, and <strong>. No conversational filler, ONLY return HTML."
                     },
                     {
                         role: "user",
-                        content: `Write a marketing description for this product: ${title}. ${context || ''}`
+                        content: `Write a premium North American marketing description for this product: ${title}. ${context || ''}`
                     }
                 ],
                 temperature: 0.7,
