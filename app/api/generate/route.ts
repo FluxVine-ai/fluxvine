@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -16,11 +17,26 @@ export async function OPTIONS() {
 
 export async function POST(req: Request) {
     try {
+        const supabase = await createClient();
+
+        // 1. 验证用户会话 (Auth Check)
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+        // 注意：在测试阶段，如果没有配置 Supabase 或未登录，我们先允许通过，但记录日志
+        if (authError || !user) {
+            console.log('No active session found, running in guest mode.');
+            // 在正式商业版中，这里应该返回 401
+            // return NextResponse.json({ error: 'Please login to FluxVine' }, { status: 401 });
+        }
+
         const { title, context } = await req.json();
 
         if (!title) {
             return NextResponse.json({ error: 'Missing title' }, { status: 400 });
         }
+
+        // 2. 检查用户积分 (Credits Check - Placeholder)
+        // 这里未来会查询 profiles 表中的 credits 字段
 
         const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
             method: 'POST',
@@ -59,6 +75,9 @@ export async function POST(req: Request) {
 
         const data = await response.json();
         const content = data.choices[0].message.content;
+
+        // 3. 扣除积分 (Deduct Credits - Placeholder)
+        // 如果用户存在，记录一次调用并扣费
 
         return NextResponse.json(
             { copywriting: content },
