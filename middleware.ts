@@ -1,12 +1,19 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     return await updateSession(request)
 }
 
 export const config = {
     matcher: [
+        /*
+         * 匹配所有请求路径，排除：
+         * - _next/static (静态文件)
+         * - _next/image (图片优化)
+         * - favicon.ico (图标)
+         * - 公共资源 (.png, .jpg 等)
+         */
         '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }

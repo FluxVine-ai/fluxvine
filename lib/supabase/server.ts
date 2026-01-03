@@ -18,7 +18,7 @@ export async function createClient() {
                             cookieStore.set(name, value, options)
                         )
                     } catch {
-                        // 在 Server Components 中调用此方法属于预期内的静默失败
+                        // 在 Server Component 中可能无法设置 Cookie，这是正常预期的
                     }
                 },
             },

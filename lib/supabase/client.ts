@@ -1,7 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-// 创建浏览器端 Supabase 客户端
-// 注意：不需要任何额外的 Cookie 配置，@supabase/ssr 会自动处理
 export function createClient() {
     return createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,

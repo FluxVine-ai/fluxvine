@@ -1,87 +1,92 @@
-@import "tailwindcss";
-
 :root {
-  --background: #030406;
-  --foreground: #f9fafb;
-  --card: #0d0e12;
-  --primary: #00f2ff;
-  --secondary: #7000ff;
-  --accent: #ff00c8;
-  --muted: #94a3b8;
-  --border: rgba(255, 255, 255, 0.08);
+    --bg-primary: #050505;
+    --bg-secondary: #0a0a0c;
+    --bg-card: rgba(20, 20, 25, 0.7);
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    --accent-primary: #7c3aed;
+    --accent-secondary: #0ea5e9;
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
-  --color-accent: var(--accent);
-  --color-card: var(--card);
-  --color-border: var(--border);
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
-/* 极简高级感玻璃拟态 */
-.glass {
-  background: rgba(13, 14, 18, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
-}
-
-/* 流光背景 */
+/* 动态流光背景 */
 .bg-glow {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background:
-    radial-gradient(circle at 10% 20%, rgba(0, 242, 255, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(112, 0, 255, 0.08) 0%, transparent 40%);
-  z-index: -1;
-  pointer-events: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 10% 20%, rgba(124, 58, 237, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(14, 165, 233, 0.1) 0%, transparent 40%);
 }
 
-/* 渐变文案 */
-.text-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Premium 毛玻璃卡片 */
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
-/* 悬浮发光按钮 */
-.btn-glow {
-  position: relative;
-  transition: all 0.3s ease;
+.premium-btn {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.btn-glow:hover {
-  box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
-  transform: translateY(-2px);
+.premium-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -10px var(--accent-primary);
+    opacity: 0.9;
 }
 
-/* 动画：微妙的呼吸感 */
-@keyframes pulse-gentle {
-
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-
-  50% {
-    opacity: 0.8;
-  }
+.input-field {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: white;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
 }
 
-.animate-pulse-gentle {
-  animation: pulse-gentle 4s ease-in-out infinite;
+.input-field:focus {
+    border-color: var(--accent-primary);
+}
+
+/* 文字渐变效应 */
+.gradient-text {
+    background: linear-gradient(135deg, #fff 0%, var(--text-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }

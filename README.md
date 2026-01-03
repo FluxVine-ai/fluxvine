@@ -1,36 +1,23 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FluxVine 2.0 - 建站说明
 
-## Getting Started
+## 1. Vercel 环境变量配置
+在 Vercel 后台添加以下变量：
+- `NEXT_PUBLIC_SUPABASE_URL`: `https://sdaxjpuagyagwhzpdszu.supabase.co`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: `sb_publishable_ylCGjQlmRcogdMuaDW-KhA_B8eL8dCz`
+- `NEXT_PUBLIC_SITE_URL`: `https://www.fluxvine.com` (生产环境)
 
-First, run the development server:
+## 2. Supabase 后台关键配置 (重要)
+请在 Supabase Dashboard -> Authentication -> URL Configuration 进行如下设置：
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Site URL**: `https://www.fluxvine.com`
+- **Redirect URLs**:
+  - `https://www.fluxvine.com/**`
+  - `http://localhost:3000/**`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 3. 为什么这次不会掉登录？
+1. **Middleware 刷新**: 我们在 `middleware.ts` 中拦截了所有页面请求，通过 `supabase.auth.getUser()` 强制刷新 Session。
+2. **Cookie 同步**: 使用 `@supabase/ssr`，认证信息存储在浏览器安全 Cookie 中，且在服务端和客户端之间自动同步。
+3. **域名一致性**: 确保 Vercel 中的 `fluxvine.com` 全部重定向到 `www.fluxvine.com`，避免 Cookie 在不同子域间丢失。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+FluxVine 2.0 - Built by Antigravity
