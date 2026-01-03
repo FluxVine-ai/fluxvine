@@ -18,105 +18,108 @@ export async function OPTIONS(req: Request) {
 }
 
 export async function POST(req: Request) {
+    const origin = req.headers.get('origin') || '*';
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Credentials': 'true',
+    };
+
     try {
         const supabase = await createClient();
+        const { title, context, skill_slug } = await req.json();
+        const targetSlug = skill_slug || 'shopify-us-copy';
 
         // 1. 验证用户会话 (Auth Check)
         const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-        // 如果没有登录，暂时允许测试，但在生产环境建议报错
-        const isGuest = authError || !user;
         const userId = user?.id;
 
-        // 2. 检查用户积分 (Credits Check)
-        if (userId) {
-            const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('credits')
-                .eq('id', userId)
-                .single();
-
-            if (profileError || !profile) {
-                console.error('Profile fetch error:', profileError);
-            } else if (profile.credits <= 0) {
-                return NextResponse.json(
-                    { error: 'Insufficient AI Credits. Please top up.' },
-                    { status: 403, headers: { 'Access-Control-Allow-Origin': req.headers.get('origin') || '*', 'Access-Control-Allow-Credentials': 'true' } }
-                );
-            }
+        // 如果没有登录，且不是测试环境，则报错
+        if (!userId) {
+            return NextResponse.json({ error: 'Authentication required. Please login to FluxVine.' }, { status: 401, headers: corsHeaders });
         }
 
-        const { title, context } = await req.json();
+        // 2. 获取技能详情 (Fetch Skill Details)
+        const { data: skill, error: skillError } = await supabase
+            .from('skills')
+            .select('*')
+            .eq('slug', targetSlug)
+            .single();
 
-        if (!title) {
-            return NextResponse.json({ error: 'Missing title' }, { status: 400, headers: { 'Access-Control-Allow-Origin': req.headers.get('origin') || '*', 'Access-Control-Allow-Credentials': 'true' } });
+        if (skillError || !skill) {
+            return NextResponse.json({ error: 'Skill not found or inactive.' }, { status: 404, headers: corsHeaders });
         }
 
-        // 3. 调用 AI 引擎 (DeepSeek)
-        const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "deepseek-chat",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are a world-class eCommerce copywriter specialized in the North American market (US/Canada). Write a persuasive, high-converting Shopify product description in professional American English. Structure the copy with an engaging intro paragraph, a bulleted list of 'Key Benefits' (not just features), and a brief 'Why Choose Us' section. Use HTML tags like <ul>, <li>, and <strong>. No conversational filler, ONLY return HTML."
-                    },
-                    {
-                        role: "user",
-                        content: `Write a premium North American marketing description for this product: ${title}. ${context || ''}`
-                    }
-                ],
-                temperature: 0.7,
-                max_tokens: 1000
-            })
-        });
+        // 3. 检查用户积分 (Credits Check)
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('credits')
+            .eq('id', userId)
+            .single();
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('DeepSeek Error:', errorData);
-            return NextResponse.json(
-                { error: 'AI engine failed' },
-                { status: 502, headers: { 'Access-Control-Allow-Origin': req.headers.get('origin') || '*', 'Access-Control-Allow-Credentials': 'true' } }
-            );
+        if (!profile || profile.credits <= 0) {
+            return NextResponse.json({ error: 'Insufficient AI Credits. Please top up.' }, { status: 403, headers: corsHeaders });
         }
 
-        const data = await response.json();
-        const generatedCopy = data.choices[0].message.content;
+        let generatedContent = '';
 
-        // 4. 扣除积分 (Deduct Credits)
-        if (userId) {
-            const { error: updateError } = await supabase.rpc('deduct_credits', { user_id: userId, amount: 1 });
+        // 4. 路由逻辑 (Routing Logic)
+        if (skill.n8n_webhook_url) {
+            // A. 如果定义了 n8n Webhook，则转发
+            const n8nResponse = await fetch(skill.n8n_webhook_url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, context, userId, skill: skill.name })
+            });
 
-            // 注意：由于 rpc 需要在数据库定义，我这里的 sql 还没写，先尝试直接 update
-            if (updateError) {
-                await supabase
-                    .from('profiles')
-                    .update({ credits: supabase.rpc('decrement', { x: 1 }) }) // 这行在 JS 里可能不支持，换成直接计算
-                    .eq('id', userId);
+            if (!n8nResponse.ok) throw new Error('n8n workflow failed');
+            const n8nData = await n8nResponse.json();
+            generatedContent = n8nData.output || n8nData.copywriting || JSON.stringify(n8nData);
+        } else {
+            // B. 默认使用 DeepSeek 引擎
+            const aiResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "deepseek-chat",
+                    messages: [
+                        {
+                            role: "system",
+                            content: `You are an AI Agent named "${skill.name}". Mission: ${skill.description}. Output format: Strictly HTML. No conversational filler.`
+                        },
+                        {
+                            role: "user",
+                            content: `Process this request: ${title}. Context: ${context || ''}`
+                        }
+                    ],
+                    temperature: 0.7
+                })
+            });
 
-                // 正确的用法通常是直接减去 1
-                const { data: currentProfile } = await supabase.from('profiles').select('credits').eq('id', userId).single();
-                if (currentProfile) {
-                    await supabase.from('profiles').update({ credits: Math.max(0, currentProfile.credits - 1) }).eq('id', userId);
-                }
-            }
+            if (!aiResponse.ok) throw new Error('AI engine failed');
+            const aiData = await aiResponse.json();
+            generatedContent = aiData.choices[0].message.content;
         }
+
+        // 5. 扣除积分 (Deduct Credits)
+        // 使用更稳妥的直接更新方式
+        await supabase
+            .from('profiles')
+            .update({ credits: Math.max(0, profile.credits - 1) })
+            .eq('id', userId);
 
         return NextResponse.json(
-            { copywriting: generatedCopy },
-            { headers: { 'Access-Control-Allow-Origin': req.headers.get('origin') || '*', 'Access-Control-Allow-Credentials': 'true' } }
+            { copywriting: generatedContent, skill_used: skill.name },
+            { headers: corsHeaders }
         );
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('API Error:', error);
         return NextResponse.json(
-            { error: 'Internal Server Error' },
-            { status: 500, headers: { 'Access-Control-Allow-Origin': req.headers.get('origin') || '*', 'Access-Control-Allow-Credentials': 'true' } }
+            { error: error.message || 'Internal Server Error' },
+            { status: 500, headers: corsHeaders }
         );
     }
 }
