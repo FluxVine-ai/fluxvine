@@ -2,7 +2,9 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-    // 1. 初始化 response
+    // 调试日志：打印请求路径和 Cookie 信息
+    console.log(`[Middleware] Processing ${request.nextUrl.pathname}`)
+
     let response = NextResponse.next({
         request: {
             headers: request.headers,
@@ -15,18 +17,18 @@ export async function middleware(request: NextRequest) {
         {
             cookies: {
                 getAll() {
-                    return request.cookies.getAll()
+                    const allCookies = request.cookies.getAll()
+                    // console.log('[Middleware] Getting all cookies:', allCookies.map(c => c.name))
+                    return allCookies
                 },
                 setAll(cookiesToSet) {
-                    // 2. 更新 Request 里的 cookies (供 Server Components 使用)
+                    // console.log('[Middleware] Setting cookies:', cookiesToSet.map(c => c.name))
                     cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
 
-                    // 3. 更新 Response 对象 (确保包含了最新的 Request)
                     response = NextResponse.next({
                         request,
                     })
 
-                    // 4. 更新 Response 里的 cookies (供浏览器保存)
                     cookiesToSet.forEach(({ name, value, options }) =>
                         response.cookies.set(name, value, options)
                     )
@@ -35,24 +37,32 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    // 5. 刷新 Session
-    // 这一步非常关键:
-    // - 如果 token 过期，getUser() 会自动刷新并触发上面的 setAll
-    // - 如果 token 有效，它会验证用户
-    // - 如果无效，user 为 null
-    const { data: { user } } = await supabase.auth.getUser()
+    // 刷新 Session
+    // 捕获可能的错误
+    const { data: { user }, error } = await supabase.auth.getUser()
 
-    // 6. 路由保护逻辑
+    if (error) {
+        console.error('[Middleware] Auth error:', error.message)
+    }
+
+    if (user) {
+        // console.log('[Middleware] User authenticated:', user.email)
+    } else {
+        // console.log('[Middleware] No user session')
+    }
+
+    // 路由保护逻辑
     const protectedPaths = ['/dashboard', '/api/skills', '/api/generate']
     const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
     if (isProtectedPath && !user) {
+        console.log(`[Middleware] Redirecting unauthenticated user from ${request.nextUrl.pathname} to /login`)
+
         const url = request.nextUrl.clone()
         url.pathname = '/login'
-        // 关键: 重定向时也要带上 cookies (防止循环重定向)
         const redirectResponse = NextResponse.redirect(url)
 
-        // 复制所有 cookies 到重定向响应中
+        // 确保重定向时也携带 cookies
         const allCookies = response.cookies.getAll()
         allCookies.forEach(cookie => {
             redirectResponse.cookies.set(cookie)
