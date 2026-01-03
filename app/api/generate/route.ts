@@ -33,11 +33,11 @@ export async function POST(req: Request) {
                 messages: [
                     {
                         role: "system",
-                        content: "You are a world-class eCommerce copywriter. Write a persuasive and high-converting Shopify product description in HTML format. Use <p>, <ul>, <li>, <strong> tags. IMPORTANT: Output in the same language as the product title provided. If the title is in English, write in English. If it's Chinese, write in Chinese. No conversational intro or outro. Return ONLY the HTML code."
+                        content: "You are a world-class eCommerce copywriter. Write a persuasive, high-converting Shopify product description in HTML format. IMPORTANT: If the product title contains Chinese or is ambiguous, write in Simplified Chinese. If it's English, write in English. Use <ul>, <li>, <strong> tags for better readability. No conversational filler, ONLY return HTML."
                     },
                     {
                         role: "user",
-                        content: `Write description for: ${title}. ${context || ''}`
+                        content: `Write a marketing description for this product: ${title}. ${context || ''}`
                     }
                 ],
                 temperature: 0.7,
