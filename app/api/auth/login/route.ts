@@ -98,8 +98,8 @@ export async function POST(req: Request) {
                 secure: process.env.NODE_ENV === 'production',
                 // 使用 lax 允许跨页面导航时发送 cookie
                 sameSite: 'lax',
-                // 确保服务端可访问
-                httpOnly: true,
+                // 允许客户端读取以维持状态同步
+                httpOnly: false,
                 // 设置路径为根目录
                 path: '/',
             }
