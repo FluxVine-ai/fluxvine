@@ -2,12 +2,12 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-    // 1. 创建初始响应
     let supabaseResponse = NextResponse.next({
-        request,
+        request: {
+            headers: request.headers,
+        },
     })
 
-    // 2. 创建 Supabase 客户端
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -17,31 +17,37 @@ export async function updateSession(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    // 关键修复：直接在现有的 request 和 response 上操作，不要重新创建 NextResponse.next()
-                    cookiesToSet.forEach(({ name, value, options }) => {
-                        // 同步到请求头，供后续页面使用
-                        request.cookies.set(name, value)
-                        // 同步到响应头，供浏览器保存
-                        supabaseResponse.cookies.set(name, value, {
-                            ...options,
-                            // 强制允许跨域同步，解决 www 跳转问题
-                            domain: '.fluxvine.com',
-                            path: '/',
-                            sameSite: 'lax',
-                            secure: true,
-                            httpOnly: false,
-                        })
+                    // 这是官方 GitHub 中解决刷新掉线的关键：
+                    // 1. 设置在 request 上，供后续渲染读取
+                    cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+
+                    // 2. 重新生成并覆盖 response，确保最新的 request headers 被带入
+                    supabaseResponse = NextResponse.next({
+                        request,
                     })
+
+                    // 3. 设置在 response 上，供浏览器保存
+                    // 移除任何手动 domain 绑定，让浏览器按标准处理
+                    cookiesToSet.forEach(({ name, value, options }) =>
+                        supabaseResponse.cookies.set(name, value, options)
+                    )
                 },
             },
         }
     )
 
-    // 3. 验证身份并触发 Cookie 同步
+    // 执行 getUser 触发 session 刷新
     const { data: { user } } = await supabase.auth.getUser()
 
-    // 4. 对 dashboard 路径进行强制保护
-    if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+    // 路由守卫：Middleware 层级的重定向是最稳的
+    if (
+        !user &&
+        !request.nextUrl.pathname.startsWith('/login') &&
+        !request.nextUrl.pathname.startsWith('/auth') &&
+        !request.nextUrl.pathname.startsWith('/api') &&
+        request.nextUrl.pathname !== '/'
+    ) {
+        // 无 session 且在受保护路径，跳转登录
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)

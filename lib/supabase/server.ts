@@ -18,8 +18,7 @@ export async function createClient() {
                             cookieStore.set(name, value, options)
                         )
                     } catch {
-                        // 这是预期行为：在 Server Components 中调用 setAll 会报错
-                        // 因为 Server Components 不能直接设置 Cookie
+                        // 在 Server Components 中调用此方法属于预期内的静默失败
                     }
                 },
             },
