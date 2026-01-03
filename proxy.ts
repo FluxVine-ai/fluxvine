@@ -1,8 +1,8 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-// 在新版本 Next.js 中，这个函数名改为 proxy
 export async function proxy(request: NextRequest) {
+    // 直接交由业务逻辑处理，不处理任何其他逻辑
     return await updateSession(request)
 }
 
