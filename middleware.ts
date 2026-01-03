@@ -68,19 +68,22 @@ export async function middleware(request: NextRequest) {
     const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
     if (isProtectedPath && !user) {
-        console.log(`[Middleware] Redirecting unauthenticated user from ${request.nextUrl.pathname} to /login`)
+        console.log(`[Middleware] ⚠️ User unauthenticated on protected path ${request.nextUrl.pathname}, but BYPASSING redirect for debug`)
 
+        // 暂时注释掉重定向，观察客户端状态
+        /*
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         const redirectResponse = NextResponse.redirect(url)
-
+        
         // 关键: 重定向时也要带上 cookies
         const allCookies = response.cookies.getAll()
         allCookies.forEach(cookie => {
             redirectResponse.cookies.set(cookie)
         })
-
+        
         return redirectResponse
+        */
     }
 
     return response
