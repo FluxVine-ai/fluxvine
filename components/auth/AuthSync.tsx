@@ -2,36 +2,44 @@
 
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 export default function AuthSync() {
-    useEffect(() => {
-        const supabase = createClient()
+    const router = useRouter()
+    const supabase = createClient()
 
-        // 监听 auth 状态变化
+    useEffect(() => {
+        // 官方监听器：负责在客户端状态变化时，手动同步 Cookie
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log('AuthSync Event:', event)
-            if (session) {
-                // 强制确保 session 在浏览器中是活跃的
-                localStorage.setItem('supabase.auth.token', session.access_token)
+            console.log('[AuthSync] Event:', event)
+
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                if (session) {
+                    // 按照你提供的方案：手动在浏览器端强制写入 Cookie
+                    // 我们这里写入两个：一个是通用的，一个是 Supabase 引脚所需的
+                    const maxAge = 60 * 60 * 24 * 7 // 7 days
+
+                    // 获取项目 ID (yljpcoobtbfuhwdudfau)
+                    const projectId = 'yljpcoobtbfuhwdudfau'
+                    const cookieName = `sb-${projectId}-auth-token`
+
+                    // 封装 session 数据
+                    const sessionData = JSON.stringify(session)
+                    const encodedSession = btoa(sessionData)
+
+                    document.cookie = `${cookieName}=${encodedSession}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`
+                    console.log('[AuthSync] Cookie synchronized manually')
+                }
             } else if (event === 'SIGNED_OUT') {
-                localStorage.removeItem('supabase.auth.token')
+                // 登出时彻底清理
+                const projectId = 'yljpcoobtbfuhwdudfau'
+                document.cookie = `sb-${projectId}-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+                console.log('[AuthSync] Cookie cleared manually')
             }
         })
 
-        // 初始加载时，如果发现有 Session 但 Cookie 丢了，尝试强制刷新
-        const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session && window.location.pathname.startsWith('/dashboard')) {
-                console.warn('Session missing in dashboard, attempting recovery...')
-                // 尝试重新获取，有时这能触发 Cookie 重新注入
-                await supabase.auth.getUser()
-            }
-        }
-
-        checkSession()
-
         return () => subscription.unsubscribe()
-    }, [])
+    }, [supabase, router])
 
     return null
 }
