@@ -30,7 +30,17 @@ export async function POST(req: Request) {
         const targetSlug = skill_slug || 'shopify-us-copy';
 
         // 1. 验证用户会话 (Auth Check)
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const authHeader = req.headers.get('Authorization');
+        let user;
+        if (authHeader?.startsWith('Bearer ')) {
+            const token = authHeader.split(' ')[1];
+            const { data } = await supabase.auth.getUser(token);
+            user = data.user;
+        } else {
+            const { data } = await supabase.auth.getUser();
+            user = data.user;
+        }
+
         const userId = user?.id;
 
         // 如果没有登录，且不是测试环境，则报错

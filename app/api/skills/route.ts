@@ -4,6 +4,19 @@ import { createClient } from '@/lib/supabase/server';
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
+export async function OPTIONS(req: Request) {
+    const origin = req.headers.get('origin');
+    return new Response(null, {
+        status: 204,
+        headers: {
+            'Access-Control-Allow-Origin': origin || '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Credentials': 'true',
+        },
+    });
+}
+
 export async function GET(req: Request) {
     const origin = req.headers.get('origin') || '*';
     const corsHeaders = {
@@ -15,7 +28,17 @@ export async function GET(req: Request) {
         const supabase = await createClient();
 
         // 1. 验证用户
-        const { data: { user } } = await supabase.auth.getUser();
+        const authHeader = req.headers.get('Authorization');
+        let user;
+        if (authHeader?.startsWith('Bearer ')) {
+            const token = authHeader.split(' ')[1];
+            const { data } = await supabase.auth.getUser(token);
+            user = data.user;
+        } else {
+            const { data } = await supabase.auth.getUser();
+            user = data.user;
+        }
+
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
         }
