@@ -1,11 +1,43 @@
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-    // 仅用于日志记录，不做登录拦截
-    // 登录验证完全由客户端处理
-    console.log(`[Middleware] ${request.method} ${request.nextUrl.pathname}`)
+    let response = NextResponse.next({
+        request: {
+            headers: request.headers,
+        },
+    })
 
-    return NextResponse.next()
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return request.cookies.getAll()
+                },
+                setAll(cookiesToSet) {
+                    cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+                    response = NextResponse.next({
+                        request: {
+                            headers: request.headers,
+                        },
+                    })
+                    cookiesToSet.forEach(({ name, value, options }) =>
+                        response.cookies.set(name, value, {
+                            ...options,
+                            secure: false // 关键：强制关闭 secure，允许 http 域名 (fluxvine.com) 传输 cookie
+                        })
+                    )
+                },
+            },
+        }
+    )
+
+    // IMPORTANT: DO NOT REMOVE auth.getUser()
+    await supabase.auth.getUser()
+
+    return response
 }
 
 export const config = {

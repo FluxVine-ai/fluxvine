@@ -7,27 +7,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default function Login() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const router = useRouter();
-
-    const handleSignUp = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        const supabase = createClient();
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                emailRedirectTo: `${window.location.origin}/auth/callback`,
-            },
-        });
-        if (error) setMessage(error.message);
-        else setMessage('Check your email for the confirmation link!');
-        setLoading(false);
-    };
 
     const handleSocialLogin = async (provider: 'google' | 'twitter') => {
         setLoading(true);
@@ -47,31 +29,54 @@ export default function Login() {
         setLoading(true);
         setMessage('');
 
-        try {
-            const supabase = createClient();
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+        const email = (document.getElementById('email') as HTMLInputElement).value;
+        const password = (document.getElementById('password') as HTMLInputElement).value;
 
-            if (error) {
-                setMessage(error.message);
-                setLoading(false);
-            } else if (data.session) {
-                // 手动保存 session 到 localStorage
-                localStorage.setItem('sb-access-token', data.session.access_token);
-                localStorage.setItem('sb-refresh-token', data.session.refresh_token);
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
 
-                setMessage('Login successful! Redirecting...');
+        if (error) {
+            setMessage(error.message);
+            setLoading(false);
+        } else if (data.session) {
+            setMessage('Success! Redirecting...');
+
+            // 关键：强制刷新路由器，确保服务端 Middleware 在下次请求时能读到最新的 Cookie
+            // 客户端登录会自动写入 Cookie (createBrowserClient默认行为)
+            router.refresh();
+
+            // 稍微延迟跳转，确保 Cookie 写入和 Router Refresh 生效
+            setTimeout(() => {
                 router.push('/dashboard');
-            } else {
-                setMessage('Login failed: No session created');
-                setLoading(false);
-            }
-        } catch (err: any) {
-            setMessage(err.message || 'Login failed');
+            }, 500);
+        } else {
+            setMessage('Check your email for confirmation.');
             setLoading(false);
         }
+    };
+
+    const handleSignUp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        const email = (document.getElementById('email') as HTMLInputElement).value;
+        const password = (document.getElementById('password') as HTMLInputElement).value;
+
+        const supabase = createClient();
+        const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                emailRedirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
+
+        if (error) setMessage(error.message);
+        else setMessage('Check your email for the confirmation link!');
+        setLoading(false);
     };
 
     return (
@@ -114,22 +119,24 @@ export default function Login() {
 
                 <form className="space-y-6">
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Email Address</label>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1" htmlFor="email">Email Address</label>
                         <input
+                            id="email"
+                            name="email"
                             type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            required
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-all font-medium"
                             placeholder="name@company.com"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Password</label>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1" htmlFor="password">Password</label>
                         <input
+                            id="password"
+                            name="password"
                             type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            required
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-all"
                             placeholder="••••••••"
                         />

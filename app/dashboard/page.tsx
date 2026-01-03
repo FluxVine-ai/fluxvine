@@ -35,73 +35,39 @@ export default function Dashboard() {
     useEffect(() => {
         const supabase = createClient();
 
-        // 检查登录状态
-        async function checkAuth() {
-            // 尝试手动恢复 session
-            const storedAccessToken = localStorage.getItem('sb-access-token');
-            const storedRefreshToken = localStorage.getItem('sb-refresh-token');
+        async function loadData() {
+            const { data: { user } } = await supabase.auth.getUser();
 
-            if (storedAccessToken && storedRefreshToken) {
-                const { error: sessionError } = await supabase.auth.setSession({
-                    access_token: storedAccessToken,
-                    refresh_token: storedRefreshToken,
-                });
-                if (sessionError) {
-                    console.error('Failed to restore session:', sessionError);
-                    // 只有在明确无法恢复 session 时才清除
-                    // localStorage.removeItem('sb-access-token');
-                    // localStorage.removeItem('sb-refresh-token');
-                }
+            if (user) {
+                setUser(user);
+
+                // Fetch Profile
+                const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+                setProfile(profileData);
+
+                // Fetch Skills
+                const { data: skillsData } = await supabase
+                    .from('skills')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('name', { ascending: true });
+                setSkills(skillsData || []);
             }
-
-            const { data: { user }, error } = await supabase.auth.getUser();
-
-            if (error || !user) {
-                // 未登录，跳转到登录页
-                router.push('/login');
-                return;
-            }
-
-            setUser(user);
-
-            // 获取用户 Profile
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
-            setProfile(profileData);
-
-            // 获取技能列表
-            const { data: skillsData } = await supabase
-                .from('skills')
-                .select('*')
-                .eq('is_active', true)
-                .order('name', { ascending: true });
-
-            setSkills(skillsData || []);
             setLoading(false);
         }
 
-        checkAuth();
-
-        // 监听登录状态变化
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_OUT') {
-                router.push('/login');
-            }
-        });
-
-        return () => subscription.unsubscribe();
-    }, [router]);
+        loadData();
+    }, []);
 
     if (loading) {
         return (
             <div className="flex h-screen items-center justify-center bg-background text-white">
                 <div className="text-center">
                     <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                    <p className="text-slate-400">加载中...</p>
                 </div>
             </div>
         );

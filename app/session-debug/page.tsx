@@ -1,68 +1,49 @@
-'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { cookies } from 'next/headers'
 
-export default function SessionDiagnostic() {
-    const [info, setInfo] = useState<any>({})
+export const dynamic = 'force-dynamic'
 
-    useEffect(() => {
-        checkSession()
-    }, [])
-
-    async function checkSession() {
-        const supabase = createClient()
-
-        // 获取 session
-        const { data: { session }, error } = await supabase.auth.getSession()
-
-        // 获取 user
-        const { data: { user } } = await supabase.auth.getUser()
-
-        // 检查 localStorage
-        const localStorageKeys = Object.keys(localStorage).filter(k => k.includes('supabase') || k.includes('sb-'))
-
-        // 检查 cookies
-        const cookies = document.cookie.split(';').map(c => c.trim())
-
-        setInfo({
-            hasSession: !!session,
-            sessionExpiry: session?.expires_at,
-            user: user?.email,
-            userId: user?.id,
-            localStorageKeys,
-            cookies: cookies.filter(c => c.includes('sb-') || c.includes('supabase')),
-            error: error?.message
-        })
-    }
+export default async function SessionDiagnostics() {
+    const cookieStore = await cookies()
+    const allCookies = cookieStore.getAll()
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
-            <div className="max-w-4xl mx-auto">
-                <h1 className="text-3xl font-bold text-white mb-8">🔍 Session 诊断</h1>
+        <div className="min-h-screen bg-slate-900 text-white p-10 font-mono">
+            <h1 className="text-3xl font-bold text-yellow-400 mb-6">🍪 Session Diagnostics</h1>
 
-                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 text-white">
-                    <pre className="text-sm overflow-auto">
-                        {JSON.stringify(info, null, 2)}
-                    </pre>
+            <div className="bg-black/40 p-6 rounded-xl border border-white/10 mb-8">
+                <h2 className="text-xl font-bold text-cyan-400 mb-4">Server-Side Cookies Received</h2>
+                <div className="space-y-2">
+                    {allCookies.length === 0 ? (
+                        <p className="text-red-500">❌ NO COOKIES RECEIVED ON SERVER</p>
+                    ) : (
+                        allCookies.map(cookie => (
+                            <div key={cookie.name} className="flex flex-col gap-1 p-3 bg-white/5 rounded">
+                                <span className="text-green-400 font-bold">{cookie.name}</span>
+                                <span className="text-slate-400 break-all text-xs">{cookie.value}</span>
+                                <div className="flex gap-2 text-[10px] text-slate-500 mt-1">
+                                    {cookie.path && <span>Path: {cookie.path}</span>}
+                                    {cookie.domain && <span>Domain: {cookie.domain}</span>}
+                                    {cookie.secure && <span className="text-red-400">SECURE</span>}
+                                    {cookie.httpOnly && <span className="text-blue-400">HttpOnly</span>}
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
+            </div>
 
-                <button
-                    onClick={checkSession}
-                    className="mt-4 px-6 py-3 bg-cyan-500 text-white rounded-lg font-bold hover:bg-cyan-600"
-                >
-                    🔄 刷新检查
-                </button>
-
-                <div className="mt-8 bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4">
-                    <h2 className="text-yellow-400 font-bold mb-2">💡 如何修复：</h2>
-                    <ul className="text-yellow-200 text-sm space-y-1">
-                        <li>1. 如果 hasSession 为 false，说明 session 没有保存</li>
-                        <li>2. 检查 cookies 数组是否有 sb- 开头的 cookie</li>
-                        <li>3. 检查 localStorageKeys 是否有 Supabase 相关的 key</li>
-                        <li>4. 如果都没有，可能是浏览器阻止了第三方 cookie</li>
-                    </ul>
-                </div>
+            <div className="bg-yellow-900/20 border border-yellow-700/50 p-6 rounded-xl">
+                <h3 className="text-yellow-500 font-bold mb-2">Troubleshooting Guide</h3>
+                <ul className="list-disc pl-5 space-y-2 text-sm text-yellow-200/80">
+                    <li>If you see cookies above, the Server IS receiving them.</li>
+                    <li>If you see NO cookies above, but you are logged in on the client:
+                        <ul className="list-circle pl-5 mt-1 text-slate-300">
+                            <li>Are you using <strong>http://fluxvine.com</strong>? Browser blocks Secure cookies on HTTP custom domains.</li>
+                            <li>I have forced <code>secure: false</code> in the latest update to fix exactly this.</li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
     )
