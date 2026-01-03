@@ -15,23 +15,15 @@ export async function updateSession(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    // 1. 同步到请求头
+                    // 官方模式：同步到 Request 和 Response
                     cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-
-                    // 2. 重新初始化响应
                     supabaseResponse = NextResponse.next({
                         request,
                     })
-
-                    // 3. 强制设置 Cookie 属性
                     cookiesToSet.forEach(({ name, value, options }) =>
                         supabaseResponse.cookies.set(name, value, {
                             ...options,
-                            domain: '.fluxvine.com', // 关键：允许子域名共享
-                            path: '/',
-                            sameSite: 'lax',
-                            secure: true,
-                            httpOnly: false, // 允许客户端同步
+                            // 让浏览器自动处理 Domain，适配预览域名和 www 域名
                         })
                     )
                 },
@@ -39,9 +31,11 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
+    // 刷新 Session 的核心：getUser() 
+    // 它会自动触发 setAll 如果 Session 发生了刷新
     const { data: { user } } = await supabase.auth.getUser()
 
-    // 4. 路由守卫：只在 /dashboard 下进行强制跳转
+    // 如果在 dashboard 且未登录，重定向
     if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
