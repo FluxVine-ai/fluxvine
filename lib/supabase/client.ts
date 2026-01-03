@@ -1,23 +1,10 @@
 import { createBrowserClient } from '@supabase/ssr'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
-// 单例模式
-let supabaseInstance: SupabaseClient | null = null
-
+// 创建浏览器端 Supabase 客户端
+// 注意：不需要任何额外的 Cookie 配置，@supabase/ssr 会自动处理
 export function createClient() {
-    if (supabaseInstance) {
-        return supabaseInstance
-    }
-
-    supabaseInstance = createBrowserClient(
+    return createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookieOptions: {
-                secure: false // 关键：客户端也不要设置 secure
-            }
-        }
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
-
-    return supabaseInstance
 }

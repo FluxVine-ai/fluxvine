@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// 创建服务端 Supabase 客户端
+// 用于 Server Components, Route Handlers, Server Actions
 export async function createClient() {
     const cookieStore = await cookies()
 
@@ -15,11 +17,11 @@ export async function createClient() {
                 setAll(cookiesToSet) {
                     try {
                         cookiesToSet.forEach(({ name, value, options }) =>
-                            // 恢复默认，不强制 secure false
                             cookieStore.set(name, value, options)
                         )
                     } catch {
-                        // The `setAll` method was called from a Server Component.
+                        // setAll 在 Server Component 中被调用时会抛出错误
+                        // 这是预期行为，可以安全忽略
                     }
                 },
             },
