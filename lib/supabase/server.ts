@@ -15,10 +15,8 @@ export async function createClient() {
                 setAll(cookiesToSet) {
                     try {
                         cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, {
-                                ...options,
-                                secure: false // 关键：开发环境强制允许非 HTTPS cookie
-                            })
+                            // 恢复默认，不强制 secure false
+                            cookieStore.set(name, value, options)
                         )
                     } catch {
                         // The `setAll` method was called from a Server Component.

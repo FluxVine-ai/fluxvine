@@ -24,17 +24,14 @@ export async function middleware(request: NextRequest) {
                         },
                     })
                     cookiesToSet.forEach(({ name, value, options }) =>
-                        response.cookies.set(name, value, {
-                            ...options,
-                            secure: false // 关键：强制关闭 secure，允许 http 域名 (fluxvine.com) 传输 cookie
-                        })
+                        // 移除手动 secure: false，恢复默认行为，以免与 SameSite=None 冲突
+                        response.cookies.set(name, value, options)
                     )
                 },
             },
         }
     )
 
-    // IMPORTANT: DO NOT REMOVE auth.getUser()
     await supabase.auth.getUser()
 
     return response
