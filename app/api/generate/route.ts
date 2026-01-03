@@ -33,7 +33,7 @@ export async function POST(req: Request) {
                 messages: [
                     {
                         role: "system",
-                        content: "You are a world-class eCommerce copywriter. Write a persuasive, high-converting Shopify product description in HTML format. IMPORTANT: If the product title contains Chinese or is ambiguous, write in Simplified Chinese. If it's English, write in English. Use <ul>, <li>, <strong> tags for better readability. No conversational filler, ONLY return HTML."
+                        content: "You are a world-class eCommerce copywriter. Write a persuasive, high-converting Shopify product description in HTML format. IMPORTANT: ALWAYS output in Simplified Chinese (简体中文). Use <ul>, <li>, <strong> tags for better readability. No conversational filler, ONLY return HTML."
                     },
                     {
                         role: "user",
