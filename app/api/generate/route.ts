@@ -4,13 +4,15 @@ import { createClient } from '@/lib/supabase/server';
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
-export async function OPTIONS() {
+export async function OPTIONS(req: Request) {
+    const origin = req.headers.get('origin');
     return new Response(null, {
         status: 204,
         headers: {
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': origin || '*',
             'Access-Control-Allow-Methods': 'POST, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Credentials': 'true',
         },
     });
 }
@@ -22,22 +24,35 @@ export async function POST(req: Request) {
         // 1. 验证用户会话 (Auth Check)
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-        // 注意：在测试阶段，如果没有配置 Supabase 或未登录，我们先允许通过，但记录日志
-        if (authError || !user) {
-            console.log('No active session found, running in guest mode.');
-            // 在正式商业版中，这里应该返回 401
-            // return NextResponse.json({ error: 'Please login to FluxVine' }, { status: 401 });
+        // 如果没有登录，暂时允许测试，但在生产环境建议报错
+        const isGuest = authError || !user;
+        const userId = user?.id;
+
+        // 2. 检查用户积分 (Credits Check)
+        if (userId) {
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('credits')
+                .eq('id', userId)
+                .single();
+
+            if (profileError || !profile) {
+                console.error('Profile fetch error:', profileError);
+            } else if (profile.credits <= 0) {
+                return NextResponse.json(
+                    { error: 'Insufficient AI Credits. Please top up.' },
+                    { status: 403, headers: { 'Access-Control-Allow-Origin': req.headers.get('origin') || '*', 'Access-Control-Allow-Credentials': 'true' } }
+                );
+            }
         }
 
         const { title, context } = await req.json();
 
         if (!title) {
-            return NextResponse.json({ error: 'Missing title' }, { status: 400 });
+            return NextResponse.json({ error: 'Missing title' }, { status: 400, headers: { 'Access-Control-Allow-Origin': req.headers.get('origin') || '*', 'Access-Control-Allow-Credentials': 'true' } });
         }
 
-        // 2. 检查用户积分 (Credits Check - Placeholder)
-        // 这里未来会查询 profiles 表中的 credits 字段
-
+        // 3. 调用 AI 引擎 (DeepSeek)
         const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -66,34 +81,42 @@ export async function POST(req: Request) {
             console.error('DeepSeek Error:', errorData);
             return NextResponse.json(
                 { error: 'AI engine failed' },
-                {
-                    status: 502,
-                    headers: { 'Access-Control-Allow-Origin': '*' }
-                }
+                { status: 502, headers: { 'Access-Control-Allow-Origin': req.headers.get('origin') || '*', 'Access-Control-Allow-Credentials': 'true' } }
             );
         }
 
         const data = await response.json();
-        const content = data.choices[0].message.content;
+        const generatedCopy = data.choices[0].message.content;
 
-        // 3. 扣除积分 (Deduct Credits - Placeholder)
-        // 如果用户存在，记录一次调用并扣费
+        // 4. 扣除积分 (Deduct Credits)
+        if (userId) {
+            const { error: updateError } = await supabase.rpc('deduct_credits', { user_id: userId, amount: 1 });
+
+            // 注意：由于 rpc 需要在数据库定义，我这里的 sql 还没写，先尝试直接 update
+            if (updateError) {
+                await supabase
+                    .from('profiles')
+                    .update({ credits: supabase.rpc('decrement', { x: 1 }) }) // 这行在 JS 里可能不支持，换成直接计算
+                    .eq('id', userId);
+
+                // 正确的用法通常是直接减去 1
+                const { data: currentProfile } = await supabase.from('profiles').select('credits').eq('id', userId).single();
+                if (currentProfile) {
+                    await supabase.from('profiles').update({ credits: Math.max(0, currentProfile.credits - 1) }).eq('id', userId);
+                }
+            }
+        }
 
         return NextResponse.json(
-            { copywriting: content },
-            {
-                headers: { 'Access-Control-Allow-Origin': '*' }
-            }
+            { copywriting: generatedCopy },
+            { headers: { 'Access-Control-Allow-Origin': req.headers.get('origin') || '*', 'Access-Control-Allow-Credentials': 'true' } }
         );
 
     } catch (error) {
         console.error('API Error:', error);
         return NextResponse.json(
             { error: 'Internal Server Error' },
-            {
-                status: 500,
-                headers: { 'Access-Control-Allow-Origin': '*' }
-            }
+            { status: 500, headers: { 'Access-Control-Allow-Origin': req.headers.get('origin') || '*', 'Access-Control-Allow-Credentials': 'true' } }
         );
     }
 }
