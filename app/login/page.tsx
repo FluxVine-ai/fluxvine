@@ -29,6 +29,18 @@ export default function Login() {
         setLoading(false);
     };
 
+    const handleSocialLogin = async (provider: 'google' | 'twitter') => {
+        setLoading(true);
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider,
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
+        if (error) setMessage(error.message);
+        setLoading(false);
+    };
+
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -51,8 +63,32 @@ export default function Login() {
                         <Image src="/logo.png" alt="FluxVine" width={40} height={40} />
                         <span className="text-2xl font-bold text-gradient">FluxVine</span>
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-                    <p className="text-slate-400 text-sm">Enter your details to access your dashboard</p>
+                    <h1 className="text-3xl font-bold text-white mb-2">Build Your Empire</h1>
+                    <p className="text-slate-400 text-sm">One-click access to FluxVine Cloud AI</p>
+                </div>
+
+                {/* Social Login Buttons */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                    <button
+                        onClick={() => handleSocialLogin('google')}
+                        className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all group"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" /></svg>
+                        <span className="text-xs font-bold text-white uppercase tracking-wider">Google</span>
+                    </button>
+                    <button
+                        onClick={() => handleSocialLogin('twitter')}
+                        className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all group"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.045 4.126H5.078z" /></svg>
+                        <span className="text-xs font-bold text-white uppercase tracking-wider">Twitter</span>
+                    </button>
+                </div>
+
+                <div className="relative flex items-center gap-4 mb-8">
+                    <div className="flex-1 h-px bg-white/10"></div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">or use email</span>
+                    <div className="flex-1 h-px bg-white/10"></div>
                 </div>
 
                 <form className="space-y-6">
@@ -62,7 +98,7 @@ export default function Login() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-all"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-all font-medium"
                             placeholder="name@company.com"
                         />
                     </div>
@@ -78,20 +114,20 @@ export default function Login() {
                         />
                     </div>
 
-                    <div className="flex flex-col gap-4 pt-2">
+                    <div className="flex flex-col gap-4 pt-4">
                         <button
                             onClick={handleSignIn}
                             disabled={loading}
-                            className="w-full bg-primary text-slate-950 font-bold py-4 rounded-xl btn-glow shadow-xl shadow-primary/20 transition-all"
+                            className="w-full bg-primary text-slate-950 font-extrabold py-4 rounded-xl btn-glow shadow-xl shadow-primary/20 transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Authenticating...' : 'Sign In'}
+                            {loading ? 'Authenticating...' : 'Sign In Now'}
                         </button>
                         <button
                             onClick={handleSignUp}
                             disabled={loading}
-                            className="w-full glass text-white font-bold py-4 rounded-xl hover:bg-white/5 transition-all"
+                            className="w-full bg-white/5 border border-white/20 text-white font-bold py-4 rounded-xl hover:bg-white/10 hover:border-white/40 transition-all active:scale-[0.97] shadow-lg disabled:opacity-50"
                         >
-                            Build New Account
+                            Create Free Account
                         </button>
                     </div>
                 </form>
