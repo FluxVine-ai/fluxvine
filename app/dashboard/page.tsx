@@ -36,6 +36,16 @@ export default function Dashboard() {
         const supabase = createClient();
 
         async function loadData() {
+            // 优先检查 Session (比 getUser 更快，因为它直接读 LocalStorage/Cookie)
+            const { data: { session }, error } = await supabase.auth.getSession();
+
+            if (error || !session) {
+                console.log('Client: No active session found, redirecting to login');
+                router.push('/login');
+                return;
+            }
+
+            // 获取用户信息
             const { data: { user } } = await supabase.auth.getUser();
 
             if (user) {
@@ -61,13 +71,14 @@ export default function Dashboard() {
         }
 
         loadData();
-    }, []);
+    }, [router]);
 
     if (loading) {
         return (
             <div className="flex h-screen items-center justify-center bg-background text-white">
                 <div className="text-center">
                     <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-slate-400">Verifying Identity...</p>
                 </div>
             </div>
         );
@@ -120,6 +131,7 @@ export default function Dashboard() {
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent transition-all cursor-pointer shadow-lg active:scale-95" />
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-white truncate capitalize">{fullName}</p>
+                        <p className="text-lg font-bold text-white truncate capitalize">{fullName}</p>
                         <p className="text-[10px] text-slate-500 truncate">{user?.email}</p>
                     </div>
                     <Link href="/api/auth/signout" className="text-slate-500 hover:text-white transition-colors">
