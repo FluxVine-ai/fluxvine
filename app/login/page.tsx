@@ -12,11 +12,11 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const router = useRouter();
-    const supabase = createClient();
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        const supabase = createClient();
         const { error } = await supabase.auth.signUp({
             email,
             password,
@@ -31,6 +31,7 @@ export default function Login() {
 
     const handleSocialLogin = async (provider: 'google' | 'twitter') => {
         setLoading(true);
+        const supabase = createClient();
         const { error } = await supabase.auth.signInWithOAuth({
             provider,
             options: {
@@ -47,6 +48,7 @@ export default function Login() {
         setMessage('');
 
         try {
+            const supabase = createClient();
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
@@ -54,18 +56,22 @@ export default function Login() {
 
             if (error) {
                 setMessage(error.message);
+                setLoading(false);
             } else if (data.session) {
-                // Session 创建成功，等待一下确保 cookie 被设置
+                // Session 创建成功
                 setMessage('Login successful! Redirecting...');
+                // 使用 window.location 强制刷新页面，确保 session 被加载
                 setTimeout(() => {
                     window.location.href = '/dashboard';
                 }, 500);
+            } else {
+                setMessage('Login failed: No session created');
+                setLoading(false);
             }
         } catch (err: any) {
             setMessage(err.message || 'Login failed');
+            setLoading(false);
         }
-
-        setLoading(false);
     };
 
     return (
