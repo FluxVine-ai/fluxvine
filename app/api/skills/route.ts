@@ -27,19 +27,36 @@ export async function GET(req: Request) {
     try {
         const supabase = await createClient();
 
-        // 1. 验证用户
+        // 1. 验证用户 (支持 Session Token 或 API Key)
         const authHeader = req.headers.get('Authorization');
-        let user;
+        let userId;
+
         if (authHeader?.startsWith('Bearer ')) {
             const token = authHeader.split(' ')[1];
-            const { data } = await supabase.auth.getUser(token);
-            user = data.user;
+
+            // 检查是否是 API Key
+            if (token.startsWith('fv_')) {
+                const { data: apiKeyData, error: apiKeyError } = await supabase
+                    .from('api_keys')
+                    .select('user_id, is_active')
+                    .eq('api_key', token)
+                    .single();
+
+                if (apiKeyError || !apiKeyData || !apiKeyData.is_active) {
+                    return NextResponse.json({ error: 'Invalid API key' }, { status: 401, headers: corsHeaders });
+                }
+
+                userId = apiKeyData.user_id;
+            } else {
+                const { data } = await supabase.auth.getUser(token);
+                userId = data.user?.id;
+            }
         } else {
             const { data } = await supabase.auth.getUser();
-            user = data.user;
+            userId = data.user?.id;
         }
 
-        if (!user) {
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
         }
 

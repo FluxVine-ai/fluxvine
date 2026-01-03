@@ -29,23 +29,56 @@ export async function POST(req: Request) {
         const { title, context, skill_slug } = await req.json();
         const targetSlug = skill_slug || 'shopify-us-copy';
 
-        // 1. 验证用户会话 (Auth Check)
+        // 1. 验证用户 (支持 Session Token 或 API Key)
         const authHeader = req.headers.get('Authorization');
         let user;
+        let userId;
+
         if (authHeader?.startsWith('Bearer ')) {
             const token = authHeader.split(' ')[1];
-            const { data } = await supabase.auth.getUser(token);
-            user = data.user;
+
+            // 检查是否是 API Key (以 fv_ 开头)
+            if (token.startsWith('fv_')) {
+                // API Key 认证
+                const { data: apiKeyData, error: apiKeyError } = await supabase
+                    .from('api_keys')
+                    .select('user_id, is_active')
+                    .eq('api_key', token)
+                    .single();
+
+                if (apiKeyError || !apiKeyData || !apiKeyData.is_active) {
+                    return NextResponse.json(
+                        { error: 'Invalid or inactive API key' },
+                        { status: 401, headers: corsHeaders }
+                    );
+                }
+
+                userId = apiKeyData.user_id;
+
+                // 更新 last_used_at
+                await supabase
+                    .from('api_keys')
+                    .update({ last_used_at: new Date().toISOString() })
+                    .eq('api_key', token);
+            } else {
+                // Session Token 认证
+                const { data } = await supabase.auth.getUser(token);
+                user = data.user;
+                userId = user?.id;
+            }
         } else {
+            // Cookie 认证
             const { data } = await supabase.auth.getUser();
             user = data.user;
+            userId = user?.id;
         }
 
-        const userId = user?.id;
-
-        // 如果没有登录，且不是测试环境，则报错
+        // 如果没有认证，报错
         if (!userId) {
-            return NextResponse.json({ error: 'Authentication required. Please login to FluxVine.' }, { status: 401, headers: corsHeaders });
+            return NextResponse.json(
+                { error: 'Authentication required. Please provide a valid API key or login.' },
+                { status: 401, headers: corsHeaders }
+            );
         }
 
         // 2. 获取技能详情 (Fetch Skill Details)
