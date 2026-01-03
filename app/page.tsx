@@ -24,7 +24,7 @@ export default function HomePage() {
                     background: 'rgba(124, 58, 237, 0.1)',
                     padding: '8px 16px',
                     borderRadius: '100px',
-                    color: 'var(--accent-primary)',
+                    color: '#7c3aed',
                     fontSize: '14px',
                     fontWeight: '600',
                     marginBottom: '24px'
@@ -45,7 +45,7 @@ export default function HomePage() {
                 </h1>
 
                 <p style={{
-                    color: 'var(--text-secondary)',
+                    color: '#a1a1aa',
                     fontSize: '1.1rem',
                     lineHeight: '1.6',
                     maxWidth: '600px',
@@ -61,8 +61,8 @@ export default function HomePage() {
                         </button>
                     </Link>
                     <button className="premium-btn" style={{
-                        background: 'var(--glass-bg)',
-                        border: '1px solid var(--glass-border)'
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)'
                     }}>
                         了解更多
                     </button>
@@ -74,28 +74,25 @@ export default function HomePage() {
                     gridTemplateColumns: 'repeat(3, 1fr)',
                     gap: '24px',
                     paddingTop: '40px',
-                    borderTop: '1px solid var(--glass-border)'
+                    borderTop: '1px solid rgba(255, 255, 255, 0.1)'
                 }}>
                     <div style={{ textAlign: 'left' }}>
-                        <Zap size={24} style={{ color: var(--accent-secondary), marginBottom: '12px' }} />
+                        <Zap size={24} style={{ color: '#0ea5e9', marginBottom: '12px' }} />
                         <h3 style={{ marginBottom: '8px' }}>极速响应</h3>
-                        <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Server Component 优化，毫秒级开屏。</p>
+                        <p style={{ fontSize: '14px', color: '#a1a1aa' }}>Server Component 优化，毫秒级开屏。</p>
                     </div>
                     <div style={{ textAlign: 'left' }}>
                         <Shield size={24} style={{ color: '#10b981', marginBottom: '12px' }} />
                         <h3 style={{ marginBottom: '8px' }}>安全认证</h3>
-                        <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>全新的 SSR 架构，告别登录失效。</p>
+                        <p style={{ fontSize: '14px', color: '#a1a1aa' }}>全新的 SSR 架构，告别登录失效。</p>
                     </div>
                     <div style={{ textAlign: 'left' }}>
-                        <Globe size={24} style={{ color: var(--accent-primary), marginBottom: '12px' }} />
+                        <Globe size={24} style={{ color: '#7c3aed', marginBottom: '12px' }} />
                         <h3 style={{ marginBottom: '8px' }}>全球部署</h3>
-                        <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Vercel Edge Network 驱动。</p>
+                        <p style={{ fontSize: '14px', color: '#a1a1aa' }}>Vercel Edge Network 驱动。</p>
                     </div>
                 </div>
             </div>
         </div>
     );
 }
-
-// 修正一个样式变量引用的小错误
-const varToString = (v: string) => v; 
