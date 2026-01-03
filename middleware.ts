@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+    // 1. 初始化 response
     let response = NextResponse.next({
         request: {
             headers: request.headers,
@@ -13,58 +14,51 @@ export async function middleware(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
-                get(name: string) {
-                    return request.cookies.get(name)?.value
+                getAll() {
+                    return request.cookies.getAll()
                 },
-                set(name: string, value: string, options: any) {
-                    request.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    })
+                setAll(cookiesToSet) {
+                    // 2. 更新 Request 里的 cookies (供 Server Components 使用)
+                    cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+
+                    // 3. 更新 Response 对象 (确保包含了最新的 Request)
                     response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
+                        request,
                     })
-                    response.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    })
-                },
-                remove(name: string, options: any) {
-                    request.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    })
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    })
-                    response.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    })
+
+                    // 4. 更新 Response 里的 cookies (供浏览器保存)
+                    cookiesToSet.forEach(({ name, value, options }) =>
+                        response.cookies.set(name, value, options)
+                    )
                 },
             },
         }
     )
 
-    // 刷新 session - 必须使用 getUser() 而不是 getSession()
+    // 5. 刷新 Session
+    // 这一步非常关键:
+    // - 如果 token 过期，getUser() 会自动刷新并触发上面的 setAll
+    // - 如果 token 有效，它会验证用户
+    // - 如果无效，user 为 null
     const { data: { user } } = await supabase.auth.getUser()
 
-    // 保护需要登录的路由
+    // 6. 路由保护逻辑
     const protectedPaths = ['/dashboard', '/api/skills', '/api/generate']
     const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
     if (isProtectedPath && !user) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
-        return NextResponse.redirect(url)
+        // 关键: 重定向时也要带上 cookies (防止循环重定向)
+        const redirectResponse = NextResponse.redirect(url)
+
+        // 复制所有 cookies 到重定向响应中
+        const allCookies = response.cookies.getAll()
+        allCookies.forEach(cookie => {
+            redirectResponse.cookies.set(cookie)
+        })
+
+        return redirectResponse
     }
 
     return response
