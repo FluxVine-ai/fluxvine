@@ -27,16 +27,19 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    // 刷新 session
-    await supabase.auth.getUser()
+    // 刷新 session - 必须使用 getUser() 而不是 getSession()
+    // getUser() 会向 Supabase Auth 服务器发送请求，确保 token 是最新的
+    const { data: { user } } = await supabase.auth.getUser()
 
-    // 暂时禁用登录检查，让用户能够访问 dashboard
-    // TODO: 修复 session 持久化后重新启用
-    // if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
-    //     const url = request.nextUrl.clone()
-    //     url.pathname = '/login'
-    //     return NextResponse.redirect(url)
-    // }
+    // 保护需要登录的路由
+    const protectedPaths = ['/dashboard', '/api/skills', '/api/generate']
+    const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
+
+    if (isProtectedPath && !user) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        return NextResponse.redirect(url)
+    }
 
     return supabaseResponse
 }
