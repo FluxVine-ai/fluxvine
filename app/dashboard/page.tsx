@@ -1,35 +1,97 @@
+'use client'
+
 import Image from 'next/image';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
-export default async function Dashboard() {
-    const supabase = await createClient();
+interface Profile {
+    credits: number;
+    full_name: string;
+    plan: string;
+}
 
-    // 1. 获取用户信息
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+interface Skill {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    pricing_type: string;
+}
 
-    // 2. 如果没登录，重定向到登录页
-    if (authError || !user) {
-        redirect('/login');
+interface User {
+    id: string;
+    email?: string;
+}
+
+export default function Dashboard() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<User | null>(null);
+    const [profile, setProfile] = useState<Profile | null>(null);
+    const [skills, setSkills] = useState<Skill[]>([]);
+
+    useEffect(() => {
+        const supabase = createClient();
+
+        // 检查登录状态
+        async function checkAuth() {
+            const { data: { user }, error } = await supabase.auth.getUser();
+
+            if (error || !user) {
+                // 未登录，跳转到登录页
+                router.push('/login');
+                return;
+            }
+
+            setUser(user);
+
+            // 获取用户 Profile
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            setProfile(profileData);
+
+            // 获取技能列表
+            const { data: skillsData } = await supabase
+                .from('skills')
+                .select('*')
+                .eq('is_active', true)
+                .order('name', { ascending: true });
+
+            setSkills(skillsData || []);
+            setLoading(false);
+        }
+
+        checkAuth();
+
+        // 监听登录状态变化
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') {
+                router.push('/login');
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, [router]);
+
+    if (loading) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-background text-white">
+                <div className="text-center">
+                    <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-slate-400">加载中...</p>
+                </div>
+            </div>
+        );
     }
 
-    // 3. 获取用户 Profile（包含积分）
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-    // 4. 获取所有激活的技能 (The Skill Engine)
-    const { data: skills } = await supabase
-        .from('skills')
-        .select('*')
-        .eq('is_active', true)
-        .order('name', { ascending: true });
-
     const credits = profile?.credits ?? 0;
-    const fullName = profile?.full_name || user.email?.split('@')[0] || 'User';
+    const fullName = profile?.full_name || user?.email?.split('@')[0] || 'User';
     const plan = (profile?.plan || 'Free').toUpperCase();
 
     return (
@@ -75,7 +137,7 @@ export default async function Dashboard() {
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent transition-all cursor-pointer shadow-lg active:scale-95" />
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-white truncate capitalize">{fullName}</p>
-                        <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
+                        <p className="text-[10px] text-slate-500 truncate">{user?.email}</p>
                     </div>
                     <Link href="/api/auth/signout" className="text-slate-500 hover:text-white transition-colors">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
@@ -94,9 +156,9 @@ export default async function Dashboard() {
                             <p className="text-slate-400 text-sm">Empowering your {fullName.split(' ')[0]} eCommerce empire with 500+ logic workflows.</p>
                         </div>
                         <div className="flex gap-4">
-                            <button className="px-6 py-2.5 glass rounded-xl text-sm font-bold text-white hover:border-primary/50 transition-all active:scale-95">
+                            <Link href="/dashboard/api-keys" className="px-6 py-2.5 glass rounded-xl text-sm font-bold text-white hover:border-primary/50 transition-all active:scale-95">
                                 API Access
-                            </button>
+                            </Link>
                             <button className="px-6 py-2.5 bg-primary text-slate-950 rounded-xl text-sm font-extrabold btn-glow active:scale-95">
                                 + Add Custom Skill
                             </button>
@@ -149,7 +211,7 @@ export default async function Dashboard() {
                                 </div>
                             ))}
 
-                            {/* Empty placeholder to show it's extensible */}
+                            {/* Empty placeholder */}
                             <div className="border-2 border-dashed border-white/5 p-8 rounded-3xl flex flex-col items-center justify-center text-center group cursor-pointer hover:border-white/10 hover:bg-white/[0.02] transition-all">
                                 <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center text-2xl text-slate-500 mb-4 group-hover:scale-110 group-hover:text-primary transition-all">+</div>
                                 <p className="text-slate-500 font-bold text-sm group-hover:text-slate-400 transition-colors">Connect next n8n flow</p>
