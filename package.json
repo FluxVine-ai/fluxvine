@@ -6,17 +6,24 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "remotion:preview": "remotion preview remotion/Root.tsx",
+        "remotion:render": "remotion render SignalFlash remotion/Root.tsx out/signal-flash.mp4"
     },
     "dependencies": {
+        "@remotion/cli": "^4.0.399",
+        "@remotion/google-fonts": "^4.0.399",
+        "@remotion/player": "^4.0.399",
+        "@remotion/renderer": "^4.0.399",
         "@supabase/ssr": "latest",
         "@supabase/supabase-js": "latest",
         "framer-motion": "latest",
         "html-to-image": "^1.11.13",
-        "lucide-react": "latest",
+        "lucide-react": "^0.562.0",
         "next": "latest",
         "react": "19.0.0",
         "react-dom": "19.0.0",
+        "remotion": "^4.0.399",
         "server-only": "^0.0.1"
     },
     "devDependencies": {

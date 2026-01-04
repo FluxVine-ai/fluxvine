@@ -1,9 +1,7 @@
-'use client'
-
-import React from 'react'
-import { Zap } from 'lucide-react'
+import { Zap, Video, Download, Loader2 } from 'lucide-react'
 import WarReportCard from './war-report-card'
 import { toPng } from 'html-to-image'
+import { useState } from 'react'
 
 interface ProductionLineProps {
     reportData: any;
