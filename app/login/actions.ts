@@ -14,10 +14,10 @@ export async function login(formData: FormData) {
     })
 
     if (error) {
-        redirect(`/login?message=${encodeURIComponent(error.message)}`)
+        return redirect(`/login?message=${encodeURIComponent(error.message)}`)
     }
 
-    redirect('/dashboard')
+    return redirect('/dashboard')
 }
 
 export async function signup(formData: FormData) {
@@ -27,17 +27,20 @@ export async function signup(formData: FormData) {
     const password = formData.get('password') as string
     const supabase = await createClient()
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-            emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
-        },
     })
 
     if (error) {
-        redirect(`/login?message=${encodeURIComponent(error.message)}`)
+        return redirect(`/login?message=${encodeURIComponent(error.message)}`)
     }
 
-    redirect('/login?message=请查收邮件以验证账户')
+    // 2025/2026 逻辑：如果数据中已经包含了 session (说明无需验证邮件)，直接进控制台
+    if (data?.session) {
+        return redirect('/dashboard')
+    }
+
+    // 否则提示去查收邮件
+    return redirect('/login?message=注册成功！请查收邮件验证账号。')
 }
