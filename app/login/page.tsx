@@ -1,19 +1,15 @@
 import { login, signup } from './actions'
 import { Mail, Lock, UserPlus, LogIn } from 'lucide-react'
 
-export default function LoginPage({
-    searchParams,
-}: {
-    searchParams: { message: string }
+export default async function LoginPage(props: {
+    searchParams: Promise<{ message: string }>
 }) {
+    // Next.js 15 必须 await searchParams
+    const searchParams = await props.searchParams;
+    const message = searchParams.message;
+
     return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px'
-        }}>
+        <div className="home-container">
             <div className="glass-card" style={{
                 width: '100%',
                 maxWidth: '440px',
@@ -26,7 +22,7 @@ export default function LoginPage({
 
                 <form>
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', textAlign: 'left' }}>
                             邮箱地址
                         </label>
                         <div style={{ position: 'relative' }}>
@@ -49,7 +45,7 @@ export default function LoginPage({
                     </div>
 
                     <div style={{ marginBottom: '24px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', textAlign: 'left' }}>
                             访问密码
                         </label>
                         <div style={{ position: 'relative' }}>
@@ -71,7 +67,7 @@ export default function LoginPage({
                         </div>
                     </div>
 
-                    {searchParams?.message && (
+                    {message && (
                         <div style={{
                             background: 'rgba(239, 68, 68, 0.1)',
                             color: '#ef4444',
@@ -79,9 +75,10 @@ export default function LoginPage({
                             borderRadius: '8px',
                             fontSize: '14px',
                             marginBottom: '20px',
-                            border: '1px solid rgba(239, 68, 68, 0.2)'
+                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                            textAlign: 'center'
                         }}>
-                            {searchParams.message}
+                            {message}
                         </div>
                     )}
 
@@ -89,11 +86,9 @@ export default function LoginPage({
                         <button formAction={login} className="premium-btn" style={{ width: '100%', justifyContent: 'center' }}>
                             <LogIn size={18} /> 立即登录
                         </button>
-                        <button formAction={signup} className="premium-btn" style={{
+                        <button formAction={signup} className="premium-btn secondary" style={{
                             width: '100%',
-                            justifyContent: 'center',
-                            background: 'transparent',
-                            border: '1px solid var(--glass-border)'
+                            justifyContent: 'center'
                         }}>
                             <UserPlus size={18} /> 注册账户
                         </button>
