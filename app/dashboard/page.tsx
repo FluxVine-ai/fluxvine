@@ -1,71 +1,103 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { signOut } from './actions'
-import { LayoutDashboard, LogOut, Settings, Plus, Activity } from 'lucide-react'
+import { logout } from './actions'
+import { Activity, Zap, Shield, Database, LayoutDashboard, LogOut } from 'lucide-react'
 
-// Dashboard 通常不带参数，但为了符合 2025 规范，我们也加上类型占位
 export default async function DashboardPage() {
     const supabase = await createClient()
 
-    // 这里的调用也是异步的
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
 
     if (!user) {
         return redirect('/login')
     }
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh' }}>
-            <aside className="glass-card" style={{ width: '280px', borderRadius: '0', borderLeft: 'none', borderTop: 'none', borderBottom: 'none', padding: '32px 20px', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ marginBottom: '40px', padding: '0 12px' }}>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: '800' }}>FluxVine</h1>
+        <div className="home-container" style={{ flexDirection: 'row', alignItems: 'flex-start', padding: '0', background: 'var(--fenghuo-charcoal)' }}>
+            {/* 侧边导航栏 */}
+            <aside style={{ width: '280px', height: '100vh', background: 'rgba(0,0,0,0.2)', borderRight: '1px solid var(--fenghuo-border)', padding: '40px 24px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ marginBottom: '48px' }}>
+                    <h2 className="glitch-text" data-text="FENGHUO" style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--fenghuo-orange)' }}>FENGHUO</h2>
+                    <p style={{ fontSize: '12px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>AI 竞技指挥部</p>
                 </div>
 
                 <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', color: '#7c3aed', fontWeight: '600' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: 'rgba(255, 77, 0, 0.1)', color: 'var(--fenghuo-orange)', fontWeight: '600' }}>
                         <LayoutDashboard size={20} /> 控制台
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', color: '#a1a1aa' }}>
-                        <Activity size={20} /> 任务监控
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: 'var(--fenghuo-text-secondary)', cursor: 'not-allowed' }}>
+                        <Activity size={20} /> 实时情报
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', color: '#a1a1aa' }}>
-                        <Settings size={20} /> 系统设置
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: 'var(--fenghuo-text-secondary)', cursor: 'not-allowed' }}>
+                        <Database size={20} /> 资产中心
                     </div>
                 </nav>
 
-                <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '20px' }}>
-                    <div style={{ marginBottom: '16px', padding: '0 12px', fontSize: '14px', color: '#a1a1aa' }}>
-                        {user.email}
-                    </div>
-                    <form action={signOut}>
-                        <button className="premium-btn" style={{ width: '100%', background: 'transparent', border: '1px solid rgba(255, 255, 255, 0.1)', justifyContent: 'center' }}>
-                            <LogOut size={18} /> 退出登录
-                        </button>
-                    </form>
-                </div>
+                <form action={logout}>
+                    <button type="submit" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
+                        <LogOut size={20} /> 退出登录
+                    </button>
+                </form>
             </aside>
 
-            <main style={{ flex: 1, padding: '40px' }}>
+            {/* 主内容区 */}
+            <main style={{ flex: 1, height: '100vh', overflowY: 'auto', padding: '40px 60px' }}>
                 <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                        <h2 style={{ fontSize: '2rem', marginBottom: '8px' }}>概览</h2>
-                        <p style={{ color: '#a1a1aa' }}>欢迎回来，开始管理您的 AI 技能。</p>
+                        <h1 style={{ fontSize: '2rem', fontWeight: '800', marginBottom: '8px' }}>你好, 指挥官</h1>
+                        <p style={{ color: 'var(--fenghuo-text-secondary)' }}>欢迎回到 Fenghuo.tv。当前 AI 核心运行正常。</p>
                     </div>
-                    <button className="premium-btn"><Plus size={18} /> 创建新路径</button>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                        <div className="esports-badge" style={{ color: 'var(--fenghuo-accent)', borderColor: 'var(--fenghuo-accent)' }}>Server: Online</div>
+                        <div className="esports-badge">User: {user.email?.split('@')[0]}</div>
+                    </div>
                 </header>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-                    <div className="glass-card" style={{ padding: '32px' }}>
-                        <h3 style={{ marginBottom: '16px' }}>技能状态</h3>
-                        <div style={{ fontSize: '2rem', fontWeight: '800', color: '#0ea5e9' }}>12</div>
-                        <p style={{ color: '#a1a1aa', fontSize: '14px' }}>当前活跃技能数量</p>
+                {/* 状态看板 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '48px' }}>
+                    <div className="esports-card">
+                        <h4 style={{ color: 'var(--fenghuo-text-secondary)', fontSize: '13px', marginBottom: '16px', textTransform: 'uppercase' }}>活跃技能</h4>
+                        <div style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--fenghuo-orange)' }}>02</div>
+                        <div style={{ marginTop: '12px', fontSize: '14px', color: 'var(--fenghuo-accent)' }}>● LPL 实时抓取已就绪</div>
                     </div>
-                    <div className="glass-card" style={{ padding: '32px' }}>
-                        <h3 style={{ marginBottom: '16px' }}>每日调用</h3>
-                        <div style={{ fontSize: '2rem', fontWeight: '800', color: '#7c3aed' }}>1,284</div>
-                        <p style={{ color: '#a1a1aa', fontSize: '14px' }}>近 24 小时请求总数</p>
+                    <div className="esports-card">
+                        <h4 style={{ color: 'var(--fenghuo-text-secondary)', fontSize: '13px', marginBottom: '16px', textTransform: 'uppercase' }}>数据吞吐量</h4>
+                        <div style={{ fontSize: '2.5rem', fontWeight: '900' }}>1.2k<span style={{ fontSize: '1rem', color: 'var(--fenghuo-text-secondary)' }}>/hr</span></div>
+                        <div style={{ marginTop: '12px', fontSize: '14px', color: 'var(--fenghuo-text-secondary)' }}>信号源同步中...</div>
                     </div>
                 </div>
+
+                {/* 系统日志 */}
+                <section className="esports-card" style={{ padding: '0' }}>
+                    <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--fenghuo-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: '700' }}>最新的“烽火信号”</h3>
+                        <button style={{ color: 'var(--fenghuo-orange)', background: 'transparent', border: 'none', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>查看全部</button>
+                    </div>
+                    <div style={{ padding: '8px 0' }}>
+                        <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                            <div>
+                                <div style={{ fontSize: '14px', fontWeight: '600' }}>LOL 胜率异常告警</div>
+                                <div style={{ fontSize: '12px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>AI 发现韩服卡兹克胜率飙升</div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '12px', color: 'var(--fenghuo-orange)', fontWeight: '700' }}>+4.2%</div>
+                                <div style={{ fontSize: '10px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>2分钟前</div>
+                            </div>
+                        </div>
+                        <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between' }}>
+                            <div>
+                                <div style={{ fontSize: '14px', fontWeight: '600' }}>战力演算完成</div>
+                                <div style={{ fontSize: '12px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>今日 BLG vs JDG 深度分析已生成</div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '12px', color: 'var(--fenghuo-accent)', fontWeight: '700' }}>READY</div>
+                                <div style={{ fontSize: '10px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>8分钟前</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </main>
         </div>
     )

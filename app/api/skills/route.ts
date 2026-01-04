@@ -1,31 +1,31 @@
+import { fetchLPLData } from '@/lib/skills/esports/lpl-scraper'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 
+/**
+ * 烽火技能引擎 API 入口
+ * 用于协调和触发各类 AI 技能任务
+ */
 export async function GET() {
-    const supabase = await createClient()
+    await createClient() // 确保鉴权上下文（Next.js 16 Proxy 会自动处理）
 
-    // 1. 获取当前电竞情报数据（模拟从真实数据库或缓存获取）
-    // 后期这里将对接真正的 Scraper 爬虫逻辑
-    const mockSkills = [
+    // 执行 LPL 抓取技能
+    const lplResult = await fetchLPLData.execute()
+
+    const skills = [
         {
-            id: 'lol-meta',
-            name: '英雄联盟：全球 Meta 监控',
-            status: 'active',
-            lastUpdate: '3分钟前',
-            data: '韩服高端局“卡兹克”胜率异常上升 4.2%'
+            id: fetchLPLData.id,
+            name: fetchLPLData.name,
+            description: fetchLPLData.description,
+            status: lplResult.success ? 'active' : 'error',
+            lastData: lplResult.data,
+            timestamp: lplResult.timestamp
         },
-        {
-            id: 'lpl-predict',
-            name: 'LPL 夏季赛：战力演算',
-            status: 'active',
-            lastUpdate: '10分钟前',
-            data: '今日揭幕战 BLG 胜率预测 58.4%'
-        }
+        // 后续可以继续在这里注入更多技能...
     ]
 
     return Response.json({
         timestamp: new Date().toISOString(),
         owner: 'fenghuo.tv',
-        skills: mockSkills
+        skills: skills
     })
 }
