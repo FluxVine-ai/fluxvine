@@ -1,0 +1,128 @@
+/* Fenghuo.tv Brand Identity - Esports / Cyberpunk / Battle Theme */
+
+:root {
+    /* Core Brand Colors */
+    --fenghuo-orange: #ff4d00;
+    /* 烽火橙 - 核心动效与警告 */
+    --fenghuo-orange-glow: rgba(255, 77, 0, 0.5);
+    --fenghuo-accent: #00ff9d;
+    /* 竞技绿 - 胜率、数据增长 */
+    --fenghuo-charcoal: #0a0a0c;
+    /* 底层背景 */
+    --fenghuo-surface: #121216;
+    /* 卡片表面 */
+    --fenghuo-glass: rgba(18, 18, 22, 0.7);
+
+    /* Text */
+    --fenghuo-text-primary: #ffffff;
+    --fenghuo-text-secondary: #94a3b8;
+
+    /* Borders */
+    --fenghuo-border: rgba(255, 255, 255, 0.08);
+    --fenghuo-border-active: var(--fenghuo-orange);
+}
+
+/* Base Styles */
+body {
+    background-color: var(--fenghuo-charcoal);
+    color: var(--fenghuo-text-primary);
+    font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+/* Animations - "Lightweight Video" Effects */
+@keyframes signal-scan {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 0.1;
+    }
+
+    100% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+}
+
+.scan-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--fenghuo-orange);
+    box-shadow: 0 0 15px var(--fenghuo-orange);
+    animation: signal-scan 4s linear infinite;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.glitch-text {
+    position: relative;
+    display: inline-block;
+}
+
+.glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 2px;
+    text-shadow: -1px 0 red;
+    top: 0;
+    color: white;
+    background: black;
+    overflow: hidden;
+    clip: rect(0, 900px, 0, 0);
+    animation: noise-anim 2s infinite linear alternate-reverse;
+}
+
+@keyframes noise-anim {
+    0% {
+        clip: rect(2px, 9999px, 86px, 0);
+    }
+
+    5% {
+        clip: rect(41px, 9999px, 8px, 0);
+    }
+
+    10% {
+        clip: rect(98px, 9999px, 91px, 0);
+    }
+
+    20% {
+        clip: rect(61px, 9999px, 45px, 0);
+    }
+
+    100% {
+        clip: rect(12px, 9999px, 78px, 0);
+    }
+}
+
+/* Premium Esports Cards */
+.esports-card {
+    background: var(--fenghuo-surface);
+    border: 1px solid var(--fenghuo-border);
+    border-radius: 4px;
+    /* 竞技风通常更锐利 */
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.esports-card:hover {
+    border-color: var(--fenghuo-orange);
+    box-shadow: 0 0 30px rgba(255, 77, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.esports-badge {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 2px solid var(--fenghuo-orange);
+    font-weight: 700;
+}
