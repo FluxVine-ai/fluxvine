@@ -1,8 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { logout } from './actions'
+import { signOut } from './actions'
 import { Activity, Zap, Shield, Database, LayoutDashboard, LogOut } from 'lucide-react'
+import { fetchLPLData } from '@/lib/skills/esports/lpl-scraper'
 
+// 将页面改为服务端异步组件
 export default async function DashboardPage() {
     const supabase = await createClient()
 
@@ -12,6 +14,13 @@ export default async function DashboardPage() {
 
     if (!user) {
         return redirect('/login')
+    }
+
+    // 直接从技能引擎获取实时情报 (不再进行内部 HTTP 请求)
+    let skillData: any = null;
+    const lplResult = await fetchLPLData.execute();
+    if (lplResult.success) {
+        skillData = lplResult.data;
     }
 
     return (
@@ -35,7 +44,7 @@ export default async function DashboardPage() {
                     </div>
                 </nav>
 
-                <form action={logout}>
+                <form action={signOut}>
                     <button type="submit" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#ef4444', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
                         <LogOut size={20} /> 退出登录
                     </button>
@@ -76,24 +85,28 @@ export default async function DashboardPage() {
                         <button style={{ color: 'var(--fenghuo-orange)', background: 'transparent', border: 'none', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>查看全部</button>
                     </div>
                     <div style={{ padding: '8px 0' }}>
-                        <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                            <div>
-                                <div style={{ fontSize: '14px', fontWeight: '600' }}>LOL 胜率异常告警</div>
-                                <div style={{ fontSize: '12px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>AI 发现韩服卡兹克胜率飙升</div>
+                        {skillData?.matches?.map((match: any, index: number) => (
+                            <div key={index} style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                <div>
+                                    <div style={{ fontSize: '14px', fontWeight: '600' }}>{match.matchup}</div>
+                                    <div style={{ fontSize: '12px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>{match.description}</div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: '12px', color: 'var(--fenghuo-orange)', fontWeight: '700' }}>{match.date}</div>
+                                    <div style={{ fontSize: '10px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>即将开赛</div>
+                                </div>
                             </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '12px', color: 'var(--fenghuo-orange)', fontWeight: '700' }}>+4.2%</div>
-                                <div style={{ fontSize: '10px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>2分钟前</div>
-                            </div>
-                        </div>
+                        ))}
+
+                        {/* Meta数据动态展示 */}
                         <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between' }}>
                             <div>
-                                <div style={{ fontSize: '14px', fontWeight: '600' }}>战力演算完成</div>
-                                <div style={{ fontSize: '12px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>今日 BLG vs JDG 深度分析已生成</div>
+                                <div style={{ fontSize: '14px', fontWeight: '600' }}>AI 核心动态：{skillData?.metaAnalysis?.hottestChamp}</div>
+                                <div style={{ fontSize: '12px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>{skillData?.metaAnalysis?.trend}</div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '12px', color: 'var(--fenghuo-accent)', fontWeight: '700' }}>READY</div>
-                                <div style={{ fontSize: '10px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>8分钟前</div>
+                                <div style={{ fontSize: '12px', color: 'var(--fenghuo-accent)', fontWeight: '700' }}>ACTIVE</div>
+                                <div style={{ fontSize: '10px', color: 'var(--fenghuo-text-secondary)', marginTop: '4px' }}>实时同步</div>
                             </div>
                         </div>
                     </div>
