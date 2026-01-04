@@ -1,12 +1,12 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-export async function middleware(request: NextRequest) {
+// Next.js 16+ 使用 proxy 约定来处理边缘请求和路由拦截
+export async function proxy(request: NextRequest) {
     return await updateSession(request)
 }
 
-// 2025 官方最佳实践：如果涉及复杂 SDK (如 Supabase)，
-// 建议显式声明使用 nodejs 运行时，避开 Edge Runtime 的 API 限制。
+// 依然保持 nodejs 运行时以支持 Supabase SDK
 export const runtime = 'nodejs'
 
 export const config = {
