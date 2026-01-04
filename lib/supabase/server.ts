@@ -1,3 +1,4 @@
+import 'server-only'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -18,7 +19,7 @@ export async function createClient() {
                             cookieStore.set(name, value, options)
                         )
                     } catch {
-                        // 在 Server Component 中可能无法设置 Cookie，这是正常预期的
+                        // 在 Server Component 中可能无法设置 Cookie
                     }
                 },
             },

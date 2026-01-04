@@ -9,18 +9,19 @@
         "lint": "next lint"
     },
     "dependencies": {
+        "@supabase/ssr": "latest",
+        "@supabase/supabase-js": "latest",
+        "framer-motion": "latest",
+        "lucide-react": "latest",
         "next": "latest",
         "react": "19.0.0",
         "react-dom": "19.0.0",
-        "@supabase/ssr": "latest",
-        "@supabase/supabase-js": "latest",
-        "lucide-react": "latest",
-        "framer-motion": "latest"
+        "server-only": "^0.0.1"
     },
     "devDependencies": {
-        "typescript": "latest",
         "@types/node": "latest",
         "@types/react": "latest",
-        "@types/react-dom": "latest"
+        "@types/react-dom": "latest",
+        "typescript": "latest"
     }
 }

@@ -30,6 +30,7 @@ export async function signup(formData: FormData) {
         password,
     })
 
+    // 这里的逻辑必须极简，防止 Next.js 16 编译器误解
     if (error) {
         return redirect(`/login?message=${encodeURIComponent(error.message)}`)
     }
@@ -38,5 +39,5 @@ export async function signup(formData: FormData) {
         return redirect('/dashboard')
     }
 
-    return redirect('/login?message=注册成功！请查收邮件验证账号。')
+    return redirect('/login?message=${encodeURIComponent("注册成功！请查收邮件或直接登录。")}')
 }
