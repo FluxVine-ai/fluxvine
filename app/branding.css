@@ -20,6 +20,12 @@
     /* Borders */
     --fenghuo-border: rgba(255, 255, 255, 0.08);
     --fenghuo-border-active: var(--fenghuo-orange);
+
+    /* Generic UI Tokens for Backwards Compatibility */
+    --primary: var(--fenghuo-orange);
+    --primary-glow: var(--fenghuo-orange-glow);
+    --text-main: var(--fenghuo-text-primary);
+    --text-muted: var(--fenghuo-text-secondary);
 }
 
 /* Base Styles */
