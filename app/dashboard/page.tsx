@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { signOut } from './actions'
-import { Activity, Zap, Shield, Database, LayoutDashboard, LogOut } from 'lucide-react'
 import { fetchLPLData } from '@/lib/skills/esports/lpl-scraper'
+import { generateWarReport } from '@/lib/skills/esports/war-report-generator'
+import WarReportCard from '@/components/dashboard/war-report-card'
 
 // 将页面改为服务端异步组件
 export default async function DashboardPage() {
@@ -16,11 +17,17 @@ export default async function DashboardPage() {
         return redirect('/login')
     }
 
+    // 触发 AI 战报生成
+    let reportData: any = null;
     // 直接从技能引擎获取实时情报 (不再进行内部 HTTP 请求)
     let skillData: any = null;
     const lplResult = await fetchLPLData.execute();
     if (lplResult.success) {
         skillData = lplResult.data;
+        const reportResult = await generateWarReport.execute(skillData);
+        if (reportResult.success) {
+            reportData = reportResult.data;
+        }
     }
 
     return (
