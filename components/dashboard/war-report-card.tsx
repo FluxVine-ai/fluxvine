@@ -19,7 +19,7 @@ interface WarReportCardProps {
  */
 export default function WarReportCard({ data, timestamp }: WarReportCardProps) {
     return (
-        <div id="war-report-export" className="esports-card" style={{
+        <div id="fenghuo-report-card" className="esports-card" style={{
             width: '100%',
             maxWidth: '500px',
             background: 'linear-gradient(135deg, #0a0a0c 0%, #16161a 100%)',

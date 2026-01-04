@@ -4,7 +4,7 @@ import { signOut } from './actions'
 import { Activity, Zap, Shield, Database, LayoutDashboard, LogOut } from 'lucide-react'
 import { fetchLPLData } from '@/lib/skills/esports/lpl-scraper'
 import { generateWarReport } from '@/lib/skills/esports/war-report-generator'
-import WarReportCard from '@/components/dashboard/war-report-card'
+import ProductionLine from '@/components/dashboard/production-line'
 
 // 将页面改为服务端异步组件
 export default async function DashboardPage() {
@@ -122,36 +122,9 @@ export default async function DashboardPage() {
                 </section>
 
                 {/* AI 自动化产出区 */}
-                <section>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Zap size={20} color="var(--fenghuo-orange)" /> 自动化战报生产线
-                    </h3>
-                    {reportData && (
-                        <div style={{ display: 'flex', gap: '40px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                            <WarReportCard data={reportData} timestamp={new Date().toISOString()} />
-                            <div style={{ flex: 1, minWidth: '300px' }}>
-                                <div className="esports-card">
-                                    <h4 style={{ marginBottom: '16px', color: 'var(--fenghuo-orange)' }}>生产指令状态</h4>
-                                    <ul style={{ listStyle: 'none', padding: 0, fontSize: '14px', color: 'var(--fenghuo-text-secondary)' }}>
-                                        <li style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between' }}>
-                                            <span>● 原始信号解析</span>
-                                            <span style={{ color: 'var(--fenghuo-accent)' }}>COMPLETED</span>
-                                        </li>
-                                        <li style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between' }}>
-                                            <span>● AI 文案协议填充</span>
-                                            <span style={{ color: 'var(--fenghuo-accent)' }}>COMPLETED</span>
-                                        </li>
-                                        <li style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between' }}>
-                                            <span>● 视觉图层渲染</span>
-                                            <span style={{ color: 'var(--fenghuo-orange)' }}>READY FOR EXPORT</span>
-                                        </li>
-                                    </ul>
-                                    <button className="premium-btn" style={{ width: '100%', marginTop: '24px', fontSize: '13px' }}>导出为战报图片 (PNG)</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </section>
+                {reportData && (
+                    <ProductionLine reportData={reportData} />
+                )}
             </main>
         </div>
     )
