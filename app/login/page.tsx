@@ -1,20 +1,18 @@
 import { login, signup } from './actions'
 import { Mail, Lock, UserPlus, LogIn } from 'lucide-react'
 
+// 按照 2025 年标准定义 PageProps
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
+
 export default async function LoginPage(props: {
-    searchParams: Promise<{ message: string }>
+    searchParams: SearchParams
 }) {
-    // Next.js 15 必须 await searchParams
     const searchParams = await props.searchParams;
-    const message = searchParams.message;
+    const message = typeof searchParams.message === 'string' ? searchParams.message : undefined;
 
     return (
         <div className="home-container">
-            <div className="glass-card" style={{
-                width: '100%',
-                maxWidth: '440px',
-                padding: '48px'
-            }}>
+            <div className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '48px' }}>
                 <div style={{ marginBottom: '32px', textAlign: 'center' }}>
                     <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '8px' }}>欢迎回来</h2>
                     <p style={{ color: 'var(--text-secondary)' }}>登录以访问您的 AI 技能引擎</p>
@@ -26,21 +24,8 @@ export default async function LoginPage(props: {
                             邮箱地址
                         </label>
                         <div style={{ position: 'relative' }}>
-                            <Mail size={18} style={{
-                                position: 'absolute',
-                                left: '14px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                color: 'var(--text-secondary)'
-                            }} />
-                            <input
-                                name="email"
-                                type="email"
-                                placeholder="you@example.com"
-                                className="input-field"
-                                style={{ paddingLeft: '44px' }}
-                                required
-                            />
+                            <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+                            <input name="email" type="email" placeholder="you@example.com" className="input-field" style={{ paddingLeft: '44px' }} required />
                         </div>
                     </div>
 
@@ -49,35 +34,13 @@ export default async function LoginPage(props: {
                             访问密码
                         </label>
                         <div style={{ position: 'relative' }}>
-                            <Lock size={18} style={{
-                                position: 'absolute',
-                                left: '14px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                color: 'var(--text-secondary)'
-                            }} />
-                            <input
-                                name="password"
-                                type="password"
-                                placeholder="••••••••"
-                                className="input-field"
-                                style={{ paddingLeft: '44px' }}
-                                required
-                            />
+                            <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+                            <input name="password" type="password" placeholder="••••••••" className="input-field" style={{ paddingLeft: '44px' }} required />
                         </div>
                     </div>
 
                     {message && (
-                        <div style={{
-                            background: 'rgba(239, 68, 68, 0.1)',
-                            color: '#ef4444',
-                            padding: '12px',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            marginBottom: '20px',
-                            border: '1px solid rgba(239, 68, 68, 0.2)',
-                            textAlign: 'center'
-                        }}>
+                        <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '12px', borderRadius: '8px', fontSize: '14px', marginBottom: '20px', border: '1px solid rgba(239, 68, 68, 0.2)', textAlign: 'center' }}>
                             {message}
                         </div>
                     )}
@@ -86,18 +49,11 @@ export default async function LoginPage(props: {
                         <button formAction={login} className="premium-btn" style={{ width: '100%', justifyContent: 'center' }}>
                             <LogIn size={18} /> 立即登录
                         </button>
-                        <button formAction={signup} className="premium-btn secondary" style={{
-                            width: '100%',
-                            justifyContent: 'center'
-                        }}>
+                        <button formAction={signup} className="premium-btn secondary" style={{ width: '100%', justifyContent: 'center' }}>
                             <UserPlus size={18} /> 注册账户
                         </button>
                     </div>
                 </form>
-
-                <p style={{ marginTop: '32px', textAlign: 'center', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                    登录即代表您同意我们的服务协议。
-                </p>
             </div>
         </div>
     )
